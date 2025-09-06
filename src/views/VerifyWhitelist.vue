@@ -1,31 +1,31 @@
 <template>
-  <div class="verify-container">
-    <div class="verify-card">
-      <div v-if="loading" class="loading-state">
-        <el-icon class="loading-icon">
+  <div class="page-container">
+    <div class="card card-narrow">
+      <div v-if="loading" class="state-container">
+        <el-icon class="icon-large icon-primary loading-icon">
           <Loading/>
         </el-icon>
         <span>正在验证...</span>
       </div>
 
-      <div v-else-if="error" class="error-state">
-        <el-icon class="error-icon">
+      <div v-else-if="error" class="state-container">
+        <el-icon class="icon-large icon-error">
           <Warning/>
         </el-icon>
         <span>{{ error }}</span>
         <el-button type="primary" @click="retryVerify">重试</el-button>
       </div>
 
-      <div v-else-if="redirectToQuiz" class="redirect-state">
-        <el-icon class="info-icon">
+      <div v-else-if="redirectToQuiz" class="state-container">
+        <el-icon class="icon-large icon-info">
           <InfoFilled/>
         </el-icon>
         <span>请先完成白名单验证题目</span>
         <el-button type="primary" @click="goToQuiz">前往答题</el-button>
       </div>
 
-      <div v-else-if="success" class="success-state">
-        <el-icon class="success-icon">
+      <div v-else-if="success" class="state-container">
+        <el-icon class="icon-large icon-success">
           <CircleCheck/>
         </el-icon>
         <span>验证成功!</span>
@@ -41,6 +41,7 @@ import {onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {CircleCheck, InfoFilled, Loading, Warning} from '@element-plus/icons-vue'
 import axios from 'axios'
+import {addIPToHeaders} from '../utils/ipUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -59,38 +60,10 @@ const verifyCode = async () => {
   }
 
   try {
-    // 获取用户IP的函数
-    const getIpFromPrimarySource = () => {
-      return fetch('https://api.ipify.org?format=json')
-          .then(response => response.json())
-          .catch(error => {
-            console.warn('主要IP获取接口失败，尝试备用接口:', error)
-            return getIpFromBackupSource()
-          })
-    }
-
-    // 备用IP获取接口
-    const getIpFromBackupSource = () => {
-      return fetch('https://ipinfo.io/json')
-          .then(response => response.json())
-          .catch(error => {
-            console.warn('备用IP获取接口也失败:', error)
-            return {}
-          })
-    }
-
-    // 获取IP
-    const ipData = await getIpFromPrimarySource()
-
-    // 准备请求头
-    const headers = {
+    // 使用封装的IP工具函数获取请求头
+    const headers = await addIPToHeaders({
       'Content-Type': 'application/json'
-    }
-
-    // 如果成功获取到IP，添加到请求头
-    if (ipData && ipData.ip) {
-      headers['X-Real-IP'] = ipData.ip
-    }
+    })
 
     // 确保API URL使用HTTPS
     const apiUrl = import.meta.env.VITE_API_URL || ''
@@ -212,75 +185,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.verify-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--theme-gradient);
-  padding: 20px;
-  font-family: 'CustomFont', sans-serif;
-}
-
-.verify-card {
-  background: var(--theme-bg);
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  min-width: 300px;
-  backdrop-filter: blur(8px);
-  font-family: 'CustomFont', sans-serif;
-}
-
-.loading-state,
-.error-state,
-.redirect-state,
-.success-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  font-family: 'CustomFont', sans-serif;
-}
-
-.loading-icon {
-  font-size: 48px;
-  color: var(--theme-primary);
-  animation: rotate 2s linear infinite;
-}
-
-.error-icon {
-  font-size: 48px;
-  color: #f56c6c;
-}
-
-.success-icon {
-  font-size: 48px;
-  color: #67c23a;
-}
-
-.info-icon {
-  font-size: 48px;
-  color: #409EFF;
-}
-
 .success-message {
   color: var(--theme-text);
   margin: 16px 0;
-  font-family: 'CustomFont', sans-serif;
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 自定义 Element Plus 组件样式 */
+/* Element Plus 组件样式覆盖 */
 :deep(.el-button) {
   font-family: 'CustomFont', sans-serif;
 }

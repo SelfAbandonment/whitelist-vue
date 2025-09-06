@@ -1,0 +1,252 @@
+/* 通用容器样式 */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--theme-gradient);
+  padding: 20px;
+  font-family: 'CustomFont', sans-serif;
+}
+
+/* 页面容器样式 */
+.page-container-full {
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--theme-gradient);
+  font-family: 'CustomFont', sans-serif;
+}
+
+/* 通用卡片样式 */
+.card {
+  background: var(--theme-bg);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  font-family: 'CustomFont', sans-serif;
+}
+
+.card-wide {
+  width: 100%;
+  max-width: 800px;
+}
+
+.card-narrow {
+  min-width: 300px;
+}
+
+/* 小卡片样式 */
+.card-small {
+  background: var(--theme-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card-small:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* 通用状态样式 */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  font-family: 'CustomFont', sans-serif;
+}
+
+.state-container.with-margin {
+  margin: 32px 0;
+}
+
+/* 通用图标样式 */
+.icon-large {
+  font-size: 48px;
+}
+
+.icon-primary {
+  color: var(--theme-primary);
+}
+
+.icon-error {
+  color: #f56c6c;
+}
+
+.icon-success {
+  color: #67c23a;
+}
+
+.icon-info {
+  color: #409EFF;
+}
+
+/* 加载动画 */
+.loading-icon {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 渐变背景动画 */
+.gradient-bg {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 通用标题样式 */
+.title-large {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--theme-primary);
+  font-family: 'CustomFont', sans-serif;
+}
+
+.title-404 {
+  font-size: 6rem;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.title-medium {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--theme-primary);
+  margin: 0;
+}
+
+/* 通用文本样式 */
+.text-secondary {
+  color: var(--theme-text-secondary);
+  margin-bottom: 32px;
+  font-family: 'CustomFont', sans-serif;
+}
+
+.text-white {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* 通用按钮容器 */
+.actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 通用头部样式 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  background: var(--theme-bg);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 网格布局 */
+.grid-container {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* 标签样式 */
+.tag {
+  background-color: rgba(var(--theme-secondary-rgb), 0.1);
+  border: 1px solid var(--theme-border);
+  transition: all 0.3s ease;
+}
+
+.tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(var(--theme-secondary-rgb), 0.15);
+}
+
+/* Element Plus 组件样式覆盖 - 需要在组件中使用 :deep() */
+
+/* 主题切换器样式已移至组件中 */
+
+/* 樱花背景样式 */
+.sakura-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sakura {
+  position: absolute;
+  top: -10%;
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: #ffd7e6;
+  border-radius: 100% 0 100% 100%;
+  animation: fall var(--delay) linear infinite;
+  transform-origin: center;
+  opacity: var(--opacity, 0.7);
+  will-change: transform;
+}
+
+.sakura::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: inherit;
+  transform: rotate(45deg);
+  will-change: transform;
+}
+
+@keyframes fall {
+  0% {
+    top: -10%;
+    transform: rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--opacity, 0.7);
+  }
+  90% {
+    opacity: var(--opacity, 0.7);
+  }
+  100% {
+    top: 100%;
+    transform: rotate(360deg) translateX(100px);
+    opacity: 0;
+  }
+}

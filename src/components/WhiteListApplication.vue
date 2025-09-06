@@ -147,6 +147,7 @@ import axios from 'axios';
 import {ArrowRight, Loading, Refresh, User} from '@element-plus/icons-vue'
 import {debounce} from 'lodash-es';
 import SakuraBackground from './common/SakuraBackground.vue'
+import {addIPToHeaders} from '../utils/ipUtils'
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // 使用环境变量
@@ -178,7 +179,7 @@ const debouncedRefresh = debounce((refresh) => {
 // 添加初始加载状态
 const initialLoading = ref(true);
 
-const submitForm = () => {
+const submitForm = async () => {
   if (!form.userName || !form.qqNum || !form.onlineFlag) {
     ElMessage.error('请填写完整信息');
   } else if (!/^\d{5,11}$/.test(form.qqNum)) {
@@ -186,64 +187,24 @@ const submitForm = () => {
   } else {
     fullscreenLoading.value = true;
 
-    const headers = {};
-    // 尝试获取用户IP，添加备用接
-    const getIpFromPrimarySource = () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      return fetch('https://ip.useragentinfo.com/json', {
-        signal: controller.signal
-      })
-          .then(response => response.json())
-          .catch(error => {
-            console.warn('主要IP获取接口失败，尝试备用接口:', error);
-            return getIpFromBackupSource();
-          })
-          .finally(() => clearTimeout(timeoutId));
-    };
-
-    // 备用IP获取接口
-    const getIpFromBackupSource = () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      return fetch('https://ipinfo.io/json', {
-        signal: controller.signal
-      })
-          .then(response => response.json())
-          .catch(error => {
-            console.warn('备用IP获取接口也失败:', error);
-            // 返回一个空对象，表示无法获取IP
-            return {};
-          })
-          .finally(() => clearTimeout(timeoutId));
-    };
-
-    // 开始获取IP
-    getIpFromPrimarySource()
-        .then(data => {
-          // 如果成功获取到IP，添加到请求头
-          if (data && data.ip) {
-            headers['X-Real-IP'] = data.ip;
-          }
-
-          // 发送表单请求
-          return http.post('/mc/whitelist/apply', form, {headers});
-        })
-        .then((res) => {
-          if (res.data.code === 200) {
-            ElMessage.success(res.data.msg);
-          } else {
-            ElMessage.error(res.data.msg || '未知错误，请联系管理员');
-          }
-          fullscreenLoading.value = false;
-        })
-        .catch((error) => {
-          console.error('提交表单请求出错：', error);
-          ElMessage.error('提交表单时发生错误，请检查网络或联系管理员');
-          fullscreenLoading.value = false;
-        });
+    try {
+      // 使用封装的IP工具函数获取请求头
+      const headers = await addIPToHeaders();
+      
+      // 发送表单请求
+      const res = await http.post('/mc/whitelist/apply', form, {headers});
+      
+      if (res.data.code === 200) {
+        ElMessage.success(res.data.msg);
+      } else {
+        ElMessage.error(res.data.msg || '未知错误，请联系管理员');
+      }
+    } catch (error) {
+      console.error('提交表单请求出错：', error);
+      ElMessage.error('提交表单时发生错误，请检查网络或联系管理员');
+    } finally {
+      fullscreenLoading.value = false;
+    }
   }
 };
 

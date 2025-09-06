@@ -1,3 +1,6 @@
+/* 引入通用样式 */
+@import './common.css';
+
 @font-face {
     font-family: 'CustomFont'; /* 自定义字体名称 */
     src: url('../asset/font.woff2') format('truetype'); /* 字体文件路径 */

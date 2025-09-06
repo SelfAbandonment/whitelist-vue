@@ -106,6 +106,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 主题切换器基础样式 */
 .theme-switcher {
   position: fixed;
   bottom: 20px;

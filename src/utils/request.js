@@ -1,11 +1,24 @@
 import axios from 'axios'
 import {ElMessage} from 'element-plus'
 import router from '../router'
+import {addIPToHeaders} from './ipUtils'
 
 const request = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     timeout: 8000
 })
+
+// 请求拦截器：自动添加IP信息
+request.interceptors.request.use(
+    async (config) => {
+        // 为所有请求自动添加IP信息
+        config.headers = await addIPToHeaders(config.headers || {})
+        return config
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
+)
 
 // 添加重试机制
 request.interceptors.response.use(

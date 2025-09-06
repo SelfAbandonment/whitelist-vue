@@ -1,18 +1,18 @@
 <template>
-  <div class="quiz-container">
-    <div class="quiz-card">
-      <h2 class="quiz-title">白名单验证题目</h2>
-      <p class="quiz-subtitle">请完成以下问题以继续验证流程</p>
+  <div class="page-container">
+    <div class="card card-wide">
+      <h2 class="title-large">白名单验证题目</h2>
+      <p class="text-secondary">请完成以下问题以继续验证流程</p>
 
-      <div v-if="loading" class="loading-state">
-        <el-icon class="loading-icon">
+      <div v-if="loading" class="state-container with-margin">
+        <el-icon class="icon-large icon-primary loading-icon">
           <Loading/>
         </el-icon>
         <span>正在加载题目...</span>
       </div>
 
-      <div v-else-if="error" class="error-state">
-        <el-icon class="error-icon">
+      <div v-else-if="error" class="state-container with-margin">
+        <el-icon class="icon-large icon-error">
           <Warning/>
         </el-icon>
         <span>{{ error }}</span>
@@ -86,6 +86,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {Loading, Warning} from '@element-plus/icons-vue'
 import axios from 'axios'
 import {ElMessage} from 'element-plus'
+import {addIPToHeaders} from '../utils/ipUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -195,29 +196,8 @@ const submitAnswers = async () => {
 
 
   try {
-    // 准备请求头
-    const headers = {}
-
-    // 获取用户IP
-    try {
-      const ipResponse = await fetch('https://api.ipify.org?format=json')
-      const ipData = await ipResponse.json()
-      if (ipData && ipData.ip) {
-        headers['X-Real-IP'] = ipData.ip
-      }
-    } catch (ipErr) {
-      console.warn('获取IP失败:', ipErr)
-      // 备用IP获取方法
-      try {
-        const backupIpResponse = await fetch('https://ipinfo.io/json')
-        const backupIpData = await backupIpResponse.json()
-        if (backupIpData && backupIpData.ip) {
-          headers['X-Real-IP'] = backupIpData.ip
-        }
-      } catch (backupIpErr) {
-        console.warn('备用IP获取也失败:', backupIpErr)
-      }
-    }
+    // 使用封装的IP工具函数获取请求头
+    const headers = await addIPToHeaders()
 
     const apiUrl = import.meta.env.VITE_API_URL
 
@@ -270,67 +250,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-
-.quiz-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--theme-gradient);
-  padding: 20px;
-  font-family: 'CustomFont', sans-serif;
-}
-
-.quiz-card {
-  background: var(--theme-bg);
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 100%;
-  max-width: 800px;
-  backdrop-filter: blur(8px);
-  font-family: 'CustomFont', sans-serif;
-}
-
-.quiz-title {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: var(--theme-primary);
-  font-family: 'CustomFont', sans-serif;
-}
-
-.quiz-subtitle {
-  color: var(--theme-text-secondary);
-  margin-bottom: 32px;
-  font-family: 'CustomFont', sans-serif;
-}
-
-.loading-state,
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  margin: 32px 0;
-  font-family: 'CustomFont', sans-serif;
-}
-
-.loading-icon {
-  font-size: 48px;
-  color: var(--theme-primary);
-  animation: rotate 2s linear infinite;
-}
-
-.error-icon {
-  font-size: 48px;
-  color: #f56c6c;
-}
-
 .questions-container {
   text-align: left;
-  font-family: 'CustomFont', sans-serif;
 }
 
 .question-item {
@@ -341,7 +262,6 @@ onMounted(() => {
   font-weight: 500;
   margin-bottom: 16px;
   color: var(--theme-text);
-  font-family: 'CustomFont', sans-serif;
 }
 
 .required-marker {
@@ -353,34 +273,13 @@ onMounted(() => {
   margin-left: 8px;
 }
 
-.actions {
-  margin-top: 32px;
-  display: flex;
-  justify-content: center;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 自定义 Element Plus 组件样式 */
+/* Element Plus 组件样式覆盖 */
 :deep(.el-radio),
 :deep(.el-checkbox),
 :deep(.el-radio__label),
-:deep(.el-checkbox__label) {
-  font-family: 'CustomFont', sans-serif;
-}
-
+:deep(.el-checkbox__label),
 :deep(.el-input__inner),
-:deep(.el-textarea__inner) {
-  font-family: 'CustomFont', sans-serif;
-}
-
+:deep(.el-textarea__inner),
 :deep(.el-button) {
   font-family: 'CustomFont', sans-serif;
 }

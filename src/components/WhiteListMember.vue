@@ -232,10 +232,102 @@
         <template #footer>
           <div class="dialog-footer">
             <el-button
+                v-if="memberDetail && memberDetail['答题ID']"
+                type="primary"
+                round
+                :loading="quizLoading"
+                @click="viewQuizDetail()"
+            >查看答题详情
+            </el-button>
+            <el-button
                 round
                 @click="dialogVisible = false"
             >关闭
             </el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <!-- 答题详情弹窗 -->
+      <el-dialog
+          v-model="quizDialogVisible"
+          :close-on-click-modal="true"
+          :show-close="true"
+          append-to-body
+          class="member-detail-dialog"
+          destroy-on-close
+          title="答题详情"
+          width="640px"
+      >
+        <div v-loading="quizLoading" class="member-detail">
+          <template v-if="quizDetail">
+            <template v-for="(val, key) in quizDetail" :key="key">
+              <!-- 专门渲染答题详情列表 -->
+              <div v-if="key === '答题详情' && Array.isArray(val)" class="detail-item" style="display:block">
+                <span class="detail-label" style="display:block;margin-bottom:8px">{{ key }}</span>
+                <div v-if="val.length">
+                  <div v-for="(q, idx) in val" :key="idx" class="quiz-item">
+                    <div class="quiz-row">
+                      <span class="quiz-label">问题类型</span>
+                      <span class="quiz-value">{{ mapQuestionType(q['问题类型']) }}</span>
+                    </div>
+                    <template v-if="q['问题类型'] !== 4">
+                      <div class="quiz-row">
+                        <span class="quiz-label">问题内容</span>
+                        <span class="quiz-value">{{ q['问题内容'] }}</span>
+                      </div>
+                      <div class="quiz-row" v-if="q['玩家答案']">
+                        <span class="quiz-label">玩家答案</span>
+                        <span class="quiz-value">{{ q['玩家答案'] }}</span>
+                      </div>
+                      <div class="quiz-row">
+                        <span class="quiz-label">是否正确</span>
+                        <span class="quiz-value">{{ q['是否正确'] }}</span>
+                      </div>
+                      <div class="quiz-row">
+                        <span class="quiz-label">得分</span>
+                        <span class="quiz-value">{{ q['得分'] }}</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="quiz-row">
+                        <span class="quiz-label">随机验证</span>
+                        <span class="quiz-value">{{ q['是否正确'] }}</span>
+                      </div>
+                    </template>
+                    <el-divider/>
+                  </div>
+                </div>
+                <div v-else class="quiz-empty">暂无数据</div>
+              </div>
+
+              <!-- 其他数组或普通键值通用渲染 -->
+              <div v-else-if="Array.isArray(val)" class="detail-item" style="display:block">
+                <span class="detail-label" style="display:block;margin-bottom:8px">{{ key }}</span>
+                <div v-if="val.length">
+                  <div v-for="(item, idx) in val" :key="idx" class="quiz-item">
+                    <template v-for="(v2, k2) in item" :key="`${idx}-${k2}`">
+                      <div v-if="k2 !== '@type'" class="quiz-row">
+                        <span class="quiz-label">{{ k2 }}</span>
+                        <span class="quiz-value">{{ v2 }}</span>
+                      </div>
+                    </template>
+                    <el-divider/>
+                  </div>
+                </div>
+                <div v-else class="quiz-empty">暂无数据</div>
+              </div>
+              <div v-else class="detail-item">
+                <span class="detail-label">{{ key }}</span>
+                <span class="detail-value">{{ key === '提交时间' ? formatToYMD(val) : val }}</span>
+              </div>
+            </template>
+          </template>
+        </div>
+
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button round @click="quizDialogVisible = false">关闭</el-button>
           </div>
         </template>
       </el-dialog>
@@ -264,6 +356,9 @@ const lastUpdateTime = ref('');
 // 添加成员详情相关的响应式变量
 const dialogVisible = ref(false);
 const memberDetail = ref(null);
+const quizDialogVisible = ref(false);
+const quizLoading = ref(false);
+const quizDetail = ref(null);
 
 const skinViewerContainer = ref(null);
 const loadingSkin = ref(false);
@@ -285,6 +380,35 @@ let currentAnimationFrame = null; // 用于跟踪当前动画帧
 
 // 添加在线玩家状态的响应式变量
 const onlinePlayers = ref(new Set());
+
+// 用于背景组件的暗色标记（保持与主题逻辑一致）
+const isDark = ref(document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme-mode') === 'dark');
+
+// 题型映射
+const mapQuestionType = (type) => {
+  const map = {
+    1: '单选题',
+    2: '多选题',
+    3: '填空题',
+    4: '随机验证'
+  };
+  return map[type] || type;
+};
+
+// 时间格式化为 yyyy-MM-dd
+const formatToYMD = (val) => {
+  if (!val) return '';
+  try {
+    const d = new Date(val);
+    if (Number.isNaN(d.getTime())) return String(val);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+  } catch (e) {
+    return String(val);
+  }
+};
 
 // 获取当前主题
 const currentTheme = ref(localStorage.getItem('theme') || 'default')
@@ -365,6 +489,33 @@ const checkMemberDetail = (memberId) => {
       })
       .finally(() => {
         loading.value = false;
+      });
+};
+
+// 查看答题详情
+const viewQuizDetail = () => {
+  const quizId = memberDetail.value && (memberDetail.value['答题ID'] || memberDetail.value['quizId'] || memberDetail.value['答题编号']);
+  if (!quizId) {
+    ElMessage.warning('未找到答题ID');
+    return;
+  }
+  quizLoading.value = true;
+  quizDialogVisible.value = true;
+  quizDetail.value = null;
+  http.get(`/api/v1/getQuizDetail/${quizId}`)
+      .then((res) => {
+        if (res.data.code === 200) {
+          quizDetail.value = res.data.data;
+        } else {
+          ElMessage.error(res.data.msg || '获取答题详情失败');
+        }
+      })
+      .catch((error) => {
+        console.error('获取答题详情失败：', error);
+        ElMessage.error('获取答题详情时发生错误，请检查网络或联系管理员');
+      })
+      .finally(() => {
+        quizLoading.value = false;
       });
 };
 
@@ -925,6 +1076,37 @@ onMounted(() => {
     width: 100%;
     text-align: left;
   }
+}
+
+/* 答题详情排版优化 */
+.quiz-item {
+  padding: 8px 0;
+}
+
+.quiz-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.quiz-label {
+  color: #606266;
+  min-width: 80px;
+  font-weight: 500;
+}
+
+.quiz-value {
+  color: #409EFF;
+  text-align: right;
+  flex: 1;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.quiz-empty {
+  color: #909399;
+  padding: 6px 0;
 }
 
 .dialog-header {
